@@ -3,8 +3,6 @@
     <div class="quill-editor"
       :content="syncHtml"
       @change="onEditorChange($event)"
-      @blur="onEditorBlur($event)"
-      @focus="onEditorFocus($event)"
       @ready="onEditorReady($event)"
       v-quill:myQuillEditor="editorOption">
     </div>
@@ -22,8 +20,18 @@ export default {
         // some quill options
         modules: {
           toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['blockquote', 'code-block']
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'header': 1 }, { 'header': 2 }],
+              [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+              [{ 'script': 'sub' }, { 'script': 'super' }],
+              [{ 'indent': '-1' }, { 'indent': '+1' }],
+              [{ 'size': ['small', 'large', 'huge'] }],
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+              [{ 'font': [] }],
+              [{ 'color': [] }, { 'background': [] }],
+              [{ 'align': [] }],
+              ['clean'],
+              ['link']
           ]
         }
       }
@@ -33,18 +41,10 @@ export default {
   },
   methods: {
     // ********************************* editor methods ******************************************
-    onEditorBlur (editor) {
-      console.log('editor blur!')
-    },
-    onEditorFocus (editor) {
-      console.log('editor focus!')
-    },
     onEditorReady (editor) {
-      console.log('editor ready!')
       this.$emit('update:syncHtml', editor.html)
     },
     onEditorChange (editor) {
-      console.log('editor change!')
       this.$emit('update:syncHtml', editor.html)
     }
   }
@@ -52,9 +52,6 @@ export default {
 </script>
 
 <style lang='scss'>
-#map {
-  height: 100%;
-}
   .quill-container {
     width: 100%;
     margin: 0 auto;

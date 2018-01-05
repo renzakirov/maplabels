@@ -58,7 +58,7 @@ const createStore = () => {
         const url = 'images/' + state.user.uid + '/' + fileName
         const fileRef = storage.ref().child(url)
         return fileRef.put(file).then(resp => {
-          console.log('Upload OK :', resp.downloadURL)
+          console.log('Upload image OK')
           return resp.downloadURL
         }).catch(err => err)
       },
@@ -67,7 +67,7 @@ const createStore = () => {
           map_name: mapName,
           map_json: json
         }).then(resp => {
-          console.log('Upload MAP OK :')
+          console.log('MAP uploaded')
         })
       },
       updateMapToDB ({state}, {key, json, mapName}) {
@@ -75,7 +75,7 @@ const createStore = () => {
           map_name: mapName,
           map_json: json
         }).then(resp => {
-          console.log('Update MAP OK :')
+          console.log('Map updated')
         })
       },
       downloadsMapListFromDB ({state, commit}) {

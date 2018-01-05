@@ -271,7 +271,7 @@ export default {
           mapName: this.mapName,
           json: mapObjects
         }).then(resp => {
-          console.log('Map uploaded to DB')
+          console.log('Map updated')
         }).catch(err => {
           console.log('Error in map uloading process')
         })
@@ -318,22 +318,10 @@ export default {
 </script>
 
 <style lang='scss' scoped>
-#map {
-  height: 100%;
-}
-  .quill-container {
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px 0;
-    .quill-editor {
-      min-height: 200px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .form-input {
-      margin-bottom: 1rem;
-    }
+  #map {
+    height: 100%;
   }
+
   .btn {
     margin-right: 10px;
     margin-bottom: 10px;

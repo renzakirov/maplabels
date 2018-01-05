@@ -1,11 +1,15 @@
 <template>
-  <div class="container">
+  <div class="container login-form-container">
     <div class="columns">
-      <div class="column col-4 col-mr-auto">
-        <div class="form-group">
-          <label class="form-label">Sign In with Google</label>
-          <button class="btn" @click="googleSignUp">Sign In</button>
+      <div class="column col-3 col-mx-auto login-form">
+        <h3>Вход:</h3>
+        <div class="divider"></div>
+        <div class="form-group google-login">
+          <h4>Войти с аккаунтом Google:</h4>
+          <button class="btn btn-block" @click="googleSignUp">Вход</button>
         </div>
+        <div class="divider"></div>
+        <h4>Войти с помощью e-mail:</h4>
         <div class="form-group">
           <label class="form-label">E-Mail</label>
           <input class="form-input" type="text" v-model="formEmail">
@@ -13,9 +17,11 @@
         <div class="form-group">
           <label class="form-label">Password</label>
           <input class="form-input" type="password" v-model="formPassword">
+          <div class="button-block text-right">
+            <button class="btn" @click="emailLogin">Вход</button>
+            <button class="btn" @click="emailSignUp">Регистрация</button>
+          </div>
         </div>
-        <button class="btn" @click="emailLogin">Sign In</button>
-        <button class="btn" @click="emailSignUp">Sign Up</button>
       </div>
     </div>
   </div>
@@ -41,10 +47,8 @@ export default {
       }).catch((e) => {
         console.log(e.message);
       })
-      console.log(this.formEmail, this.formPassword)
     },
     emailSignUp () {
-      console.log(this.formEmail, this.formPassword)
       this.$store.dispatch('signUpWithEmail', {
         email: this.formEmail,
         password: this.formPassword
@@ -55,7 +59,6 @@ export default {
       }).catch((e) => {
         console.log(e.message);
       })
-      console.log(this.formEmail, this.formPassword)
     },
     googleSignUp () {
       this.$store.dispatch('signInWithGoogle').then(() => {
@@ -67,3 +70,28 @@ export default {
   }
 }
 </script>
+
+<style lang='scss' scoped>
+@import "~spectre.css/src/_variables.scss";
+
+.login-form-container {
+  margin-top: 5rem;
+  .login-form{
+    border: 1px solid $primary-color;
+    // border-radius: 3px;
+    padding: 1rem;
+    h4 {
+      font-weight: 400;
+    }
+    .google-login {
+      margin: 1em 0;
+    }
+    .button-block {
+      margin-top: 1rem;
+      button {
+        margin-left: 0.5em;
+      }
+    }
+  }
+}
+</style>
