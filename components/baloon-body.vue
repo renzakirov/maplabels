@@ -1,12 +1,13 @@
 <template>
-  <section class="quill-container">
-    <div class="quill-editor"
+  <div class="quill-container">
+    <quill-editor class="quill-editor"
       :content="syncHtml"
+      ref="myQuillEditor"
+      :options="editorOption"
       @change="onEditorChange($event)"
-      @ready="onEditorReady($event)"
-      v-quill:myQuillEditor="editorOption">
-    </div>
-  </section>
+      @ready="onEditorReady($event)">
+    </quill-editor>
+  </div>
 </template>
 
 <script>
@@ -19,6 +20,14 @@ export default {
       editorOption: {
         // some quill options
         modules: {
+          imageResize: {
+            displayStyles: {
+            backgroundColor: 'black',
+            border: 'none',
+            color: 'white'
+          },
+          modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
+          },
           toolbar: [
               ['bold', 'italic', 'underline', 'strike'],
               [{ 'header': 1 }, { 'header': 2 }],

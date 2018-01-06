@@ -1,3 +1,5 @@
+const webpack = require('webpack')
+
 module.exports = {
   /*
    ** Headers of the page
@@ -45,12 +47,15 @@ module.exports = {
         //   exclude: /(node_modules)/
         // })
       }
-    }
-  },
-  plugins: [{
-      src: '~plugins/nuxt-plugin.js',
-      ssr: false
     },
+    plugins: [
+      new webpack.ProvidePlugin({
+        'window.Quill': 'quill'
+      })
+    ]
+  },
+  plugins: [
+    '~plugins/nuxt-plugin.js',
     '~/plugins/fireauth.js'
   ],
   router: {
