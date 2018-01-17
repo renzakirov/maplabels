@@ -1,7 +1,7 @@
 <template>
   <div class="container map-edit-container">
     <button class="btn btn-sm log-out-btn" @click="logout">Log out</button>
-    <modal-button-setting :show="showModalButtonSetting" @close="showModalButtonSetting=false" @save="saveBtnConfig"/>
+
     <div class="columns">
       <div class="column col-6 text-section">
         <h1>ПРИВЕТ</h1>
@@ -17,8 +17,43 @@
         </ul>
       </div>
       <div class="column col-6">
-        <div id="map" :style="{height: '90vh', width: '100%', margin: 'auto', 'background-color':'lightgrey'}"></div>
+        <div id="map" :style="{height: '100%', width: '90%', margin: 'auto', 'background-color':'lightgrey'}"></div>
       </div>
+      <!--div class="column col-6 objects-config-box">
+        <button class="btn" @click="addObject">Add object</button>
+        <button class="btn" @click="deleteObject" :disabled="(!this.myMap || !this.selectedObject || !this.selectedObject.placemark)">Delete object</button>
+        <fieldset :disabled="!showForm">
+          <div class="form-group">
+            <label class="form-label">Координаты:</label>
+            <div class="columns">
+              <div class="column col-4">
+                <input class="form-input" type="text" v-model="selectedObject.coord[0]">
+              </div>
+              <div class="column col-4">
+                <input class="form-input" type="text" v-model="selectedObject.coord[1]">
+              </div>
+            </div>
+            <label class="form-label">Подпись к иконке:</label>
+            <input class="form-input" type="text" v-model="selectedObject.iconContent">
+            <label class="form-label">Хинт иконки</label>
+            <input class="form-input" type="text" v-model="selectedObject.hintContent">
+            <label class="form-label">Заголовок окна</label>
+            <input class="form-input" type="text" v-model="selectedObject.balloonContentHeader">
+
+            <label class="form-label">Загрузить картинку:</label>
+            <input class="form-input" type="file" name="fileUpload" @change="onFileChange">
+
+            <tinymce id="d1" v-model="selectedObject.balloonContentBody"></tinymce>
+
+            <label class="form-label">Футер окна</label>
+            <input class="form-input" type="text" v-model="selectedObject.balloonContentFooter">
+            <button class="btn mt-2" @click="SaveObject(false)">Сохранить</button>
+            <button class="btn mt-2" @click="SaveObject(true)">Сохранить и скопировать</button>
+            <button class="btn mt-2" @click="CancelObject">Отмена</button>
+          </div>
+        </fieldset>
+          <button class="btn" @click="saveMap">Сохранить карту</button>
+      </div -->
       <div class="column col-6 config-box-container">
         <div class="map-config-box" :class="{disabled: !showMapBox}">
           <div class="divider"></div>
@@ -42,7 +77,6 @@
           <div class="column d-flex mt-2">
             <label class="form-label">Центр карты:</label>
             <input class="form-input" type="text" v-model="mapCenter">
-            <button class="btn btn-primary" @click="moveMapCenter">Переместить</button>
           </div>
           <div class="divider"></div>
           <div class="column d-flex mt-2 icon-select-column">
@@ -85,9 +119,28 @@
           </div>
           <div class="divider"></div>
 
+          <div class="column d-flex mt-2">
+            <label class="form-label">Кнопка нужна?</label>
+            <toggle-button :value="true" :labels="{checked: 'ДА', unchecked: 'НЕТ'}"/>
+          </div>
           <div class="column d-flex mt-2 map-btn-form-container">
-            <label class="form-label">Отредактируйте кнопку:</label>
-            <a class="button-in-balloon" @click="showModalButtonSetting=true">Редактировать</a>
+            <label class="form-label">Форма кнопки:</label>
+            <div class="map-btn-warper" :class="{selected: selectedBtn === 1}" @click="selectedBtn=1">
+              <button class="btn" :style="[{'border-radius':btnBorderRadius+'px'}, btnStyle]">Кнопка с рамкой</button>
+            </div>
+            <div class="map-btn-warper" :class="{selected: selectedBtn === 2}" @click="selectedBtn=2">
+              <button class="btn btn-primary" :style="[{'border-radius':btnBorderRadius+'px'}, btnPrimeStyle]">Кнопка цветная</button>
+            </div>
+          </div>
+          <div class="column d-flex mt-2 map-btn-color-select-container">
+            <label class="form-label">Цвет кнопки:</label>
+            <button class="btn" @click="vColorPicker=!vColorPicker">Выбрать цвет</button>
+            <div class="for-btn-color-picker" v-if="vColorPicker">
+              <sketch-picker :value="btnColor" @input="updateColorPicker"/>
+            </div>
+
+            <label class="form-label" :style="{'margin-left':'3rem', 'margin-right':'0.5rem'}">Радиус кнопки (px):</label>
+            <input class="form-input" type="number" :style="{'width':'4rem'}" v-model="btnBorderRadius">
           </div>
           <div class="divider"></div>
 
@@ -95,49 +148,38 @@
 
 
         <div class="objects-config-box" :class="{active: showObjectsBox}">
-          <div class="column d-flex mt-2">
-            <button class="btn" @click="addObject(true)">Добавить объект</button>
-            <button class="btn" @click="deleteObject" :disabled="(!this.myMap || !this.selectedObject || !this.selectedObject.placemark)">Удалить объект</button>
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Координаты:</label>
-            <input class="form-input" type="text" v-model="selectedObject.coord">
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Подпись к иконке:</label>
-            <input class="form-input" type="text" v-model="selectedObject.iconContent">
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Хинт иконки:</label>
-            <input class="form-input" type="text" v-model="selectedObject.hintContent">
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Заголовок окна:</label>
-            <input class="form-input" type="text" v-model="selectedObject.balloonContentHeader">
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Загрузить картинку:</label>
-            <input class="form-input" type="file" name="fileUpload" @change="onFileChange">
-          </div>
+          <button class="btn" @click="addObject">Add object</button>
+          <button class="btn" @click="deleteObject" :disabled="(!this.myMap || !this.selectedObject || !this.selectedObject.placemark)">Delete object</button>
+          <fieldset :disabled="!showForm">
+            <div class="form-group">
+              <label class="form-label">Координаты:</label>
+              <div class="columns">
+                <div class="column col-4">
+                  <input class="form-input" type="text" v-model="selectedObject.coord[0]">
+                </div>
+                <div class="column col-4">
+                  <input class="form-input" type="text" v-model="selectedObject.coord[1]">
+                </div>
+              </div>
+              <label class="form-label">Подпись к иконке:</label>
+              <input class="form-input" type="text" v-model="selectedObject.iconContent">
+              <label class="form-label">Хинт иконки</label>
+              <input class="form-input" type="text" v-model="selectedObject.hintContent">
+              <label class="form-label">Заголовок окна</label>
+              <input class="form-input" type="text" v-model="selectedObject.balloonContentHeader">
 
-          <div class="column mt-2 tiny-mce-container">
-            <tinymce id="d1" v-model="selectedObject.balloonContentBody"></tinymce>
-          </div>
-          <div class="column d-flex mt-2 add-balloon-btn-container">
-            <label class="form-label" style="min-width: 4rem;">Кнопка:</label>
-            <a class="button-in-balloon" @click="addButtonInEditor">Добавить</a>
-            <input class="form-input" type="text" v-model="btnHref" placeholder="Ссылка">
-            <input class="form-input" type="text" v-model="btnCaption" placeholder="Надпись">
-          </div>
-          <div class="column d-flex mt-2">
-            <label class="form-label">Футер окна:</label>
-            <input class="form-input" type="text" v-model="selectedObject.balloonContentFooter">
-          </div>
-          <div class="column d-flex mt-2">
-            <button class="btn mt-2" @click="SaveObject(false)">Сохранить</button>
-            <button class="btn mt-2" @click="SaveObject(true)">Сохранить и создать</button>
-            <button class="btn mt-2" @click="CancelObject">Очистить</button>
-          </div>
+              <label class="form-label">Загрузить картинку:</label>
+              <input class="form-input" type="file" name="fileUpload" @change="onFileChange">
+
+              <tinymce id="d1" v-model="selectedObject.balloonContentBody"></tinymce>
+
+              <label class="form-label">Футер окна</label>
+              <input class="form-input" type="text" v-model="selectedObject.balloonContentFooter">
+              <button class="btn mt-2" @click="SaveObject(false)">Сохранить</button>
+              <button class="btn mt-2" @click="SaveObject(true)">Сохранить и скопировать</button>
+              <button class="btn mt-2" @click="CancelObject">Отмена</button>
+            </div>
+          </fieldset>
         </div>
 
       </div>
@@ -148,77 +190,14 @@
 <script>
 import { mapGetters } from 'vuex'
 import tinymce from 'vue-tinymce-editor'
-import * as R from 'ramda'
-import modalButtonSetting from '../components/modal-button-setting'
 
 export default {
   components: {
-    'tinymce': tinymce,
-    'modal-button-setting': modalButtonSetting
+    tinymce
   },
   data () {
     return {
-      mapCenter: [47.21331185785009,39.72178182031252],
-      showMapBox: true,
-      showObjectsBox: false,
-      iconImgFiles: [
-        'redIcon.png',
-        'redDotIcon.png',
-        'redCircleIcon.png',
-        'redCircleDotIcon.png',
-        'redStretchyIcon.png'
-      ],
-      iconName: [
-        'Icon',
-        'DotIcon',
-        'CircleIcon',
-        'CircleDotIcon',
-        'StretchyIcon'
-      ],
-      selectedIcon: 0,
-      iconTableColors: [
-        '0',
-        '#1E98FF',
-        '#ED4543',
-        '#E6761B',
-        '#0E4779',
-        '#177BC9',
-        '#F371D1',
-        '#B3B3B3',
-        '#793D0E',
-        '#1BAD03',
-        '#B51EFF',
-        '#595959',
-        '#FFD21E',
-        '#56DB40',
-        '#FF931E',
-        '#82CDFF',
-        '#97A100'
-      ],
-      iconColor: [
-        'blue',
-        'red',
-        'darkOrange',
-        'night',
-        'darkBlue',
-        'pink',
-        'gray',
-        'brown',
-        'darkGreen',
-        'violet',
-        'black',
-        'yellow',
-        'green',
-        'orange',
-        'lightBlue',
-        'olive'
-      ],
-      selectedIconTableColor: 2,
-      loadingImg: '',
-      showModalButtonSetting: false,
-      selectedBtn: undefined,
-
-      datatinymce: 'data tinymce',
+      datatinymce: '[tkkj;lkdfmb;lkdsf njsdfoi',
       showMapsList: false,
       myMap: {},
       mapInJson: {},
@@ -233,12 +212,15 @@ export default {
         placemark: undefined
       },
       showForm: false,
-      btnHref: '#',
-      btnCaption: 'Открыть',
       mapName: 'Новая карта',
       selectedMap: undefined
     }
   },
+  // head () {
+  //   return {
+  //     script: [{ src: 'http://api-maps.yandex.ru/2.1/?lang=ru_RU' }]
+  //   }
+  // },
   beforeMount () {
     const yandexMapScript = document.createElement('SCRIPT')
     yandexMapScript.setAttribute('src', 'https://api-maps.yandex.ru/2.1/?lang=ru_RU')
@@ -262,117 +244,6 @@ export default {
       this.CancelObject ()
       if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) this.myMap.geoObjects.removeAll()
     },
-    item_map_init () {
-      this.myMap = new window.ymaps.Map('map', {
-        center: this.mapCenter,
-        zoom: 8
-      })
-      this.myMap.events.add('boundschange', this.changeMapBounds)
-      this.selectedObject.coord = this.mapCenter
-    },
-    changeMapBounds (event) {
-      const mapCenter = event.get('newCenter')
-      this.mapCenter = mapCenter
-    },
-    moveMapCenter () {
-      const mapCenter = R.split(',', this.mapCenter)
-      if (mapCenter && mapCenter.length == 2 ) {
-        this.myMap.setCenter(mapCenter)
-      }
-    },
-    addObject (copy) {
-      if (!this.myMap) return
-      if (!copy) this.CancelObject()
-      const coord = this.myMap.getCenter()
-      this.selectedObject.coord = coord.slice()
-      let placemark = new window.ymaps.Placemark(coord, {
-        iconContent: this.selectedObject.iconContent,
-        hintContent: this.selectedObject.hintContent,
-        balloonContentHeader: this.selectedObject.balloonContentHeader,
-        balloonContentBody: this.selectedObject.balloonContentBody,
-        balloonContentFooter: this.selectedObject.balloonContentFooter
-      }, this.presetOptions)
-      placemark.events.add('click', this.clickOnObject)
-      placemark.events.add('drag', this.dragObject)
-      this.myMap.geoObjects.add(placemark)
-      this.selectedObject.placemark = placemark
-      this.showForm = true
-    },
-    deleteObject () {
-      console.log('deleteObject')
-      if (!this.myMap || !this.selectedObject || !this.selectedObject.placemark) return
-      this.myMap.geoObjects.remove(this.selectedObject.placemark)
-      this.CancelObject()
-    },
-    clickOnObject (e) {
-      this.CancelObject()
-      const target = e.get('target')
-      const coord = e.get('coords')
-      const prop = target.properties.getAll()
-      const opt = target.options.getAll()
-      console.log('opt = ', opt)
-      this.selectedObject = {
-        coord: coord,
-        iconContent: prop.iconContent,
-        hintContent: prop.hintContent,
-        balloonContentHeader: prop.balloonContentHeader,
-        balloonContentBody: prop.balloonContentBody,
-        balloonContentFooter: prop.balloonContentFooter,
-        iconColor: opt.iconColor,
-        preset: opt.preset,
-        placemark: target
-      }
-      target.options.set({
-        preset: 'islands#redStarCircleIcon',
-        draggable: true
-      })
-      this.showForm = true
-    },
-    dragObject (e) {
-      if (this.selectedObject && this.selectedObject.placemark && this.selectedObject.placemark.geometry) {
-        const coord = this.selectedObject.placemark.geometry.getCoordinates()
-        this.selectedObject.coord = coord.slice()
-      }
-    },
-    SaveObject (copy) {
-      if (!this.selectedObject.placemark || !this.selectedObject.placemark.properties || !this.selectedObject.placemark.options || !this.selectedObject.placemark.balloon) {
-        console.log('Error in SaveObject method')
-      }
-
-      this.selectedObject.placemark.properties.set({
-        iconContent: this.selectedObject.iconContent,
-        hintContent: this.selectedObject.hintContent,
-        balloonContentHeader: this.selectedObject.balloonContentHeader,
-        balloonContentBody: this.selectedObject.balloonContentBody,
-        balloonContentFooter: this.selectedObject.balloonContentFooter
-      })
-      this.selectedObject.placemark.options.set(this.presetOptions)
-      if (copy) {
-        this.selectedObject.placemark.balloon.close()
-        this.addObject(copy)
-      }
-      this.selectedObject.placemark.balloon.open()
-    },
-    CancelObject () {
-      if (this.selectedObject.placemark) {
-        this.selectedObject.placemark.options.set(this.presetOptions)
-        if (this.selectedObject.placemark.balloon) {
-          this.selectedObject.placemark.balloon.close()
-        }
-      }
-      this.showForm = false
-      this.selectedObject = {
-        coord: ['', ''],
-        iconContent: '',
-        hintContent: '',
-        balloonContentHeader: '',
-        balloonContentBody: '',
-        balloonContentFooter: '',
-        placemark: undefined
-      }
-
-    },
-    // ****************** image & file ************
     selectMapItem(map) {
       this.showMapsList = false
       this.selectedMap = map
@@ -388,6 +259,107 @@ export default {
         this.$router.push('/')
       })
     },
+    item_map_init () {
+      this.myMap = new window.ymaps.Map('map', {
+        center: [47.222543, 39.718732],
+        zoom: 8
+      })
+    },
+    addObject (copy) {
+      if (!this.myMap) return
+      if (!copy) this.CancelObject()
+      const coord = this.myMap.getCenter()
+      this.selectedObject.coord = coord.slice()
+      let placemark = new window.ymaps.Placemark(coord, {
+        iconContent: this.selectedObject.iconContent,
+        hintContent: this.selectedObject.hintContent,
+        balloonContentHeader: this.selectedObject.balloonContentHeader,
+        balloonContentBody: this.selectedObject.balloonContentBody,
+        balloonContentFooter: this.selectedObject.balloonContentFooter
+      }, {
+        preset: 'islands#redStarCircleIcon',
+        iconColor: '#ff0000',
+        draggable: true,
+        visible: true
+      })
+      placemark.events.add('click', this.clickOnObject)
+      placemark.events.add('drag', this.dragObject)
+      this.myMap.geoObjects.add(placemark)
+      this.selectedObject.placemark = placemark
+      this.showForm = true
+      // console.log(placemark)
+    },
+    deleteObject () {
+      console.log('deleteObject')
+      if (!this.myMap || !this.selectedObject || !this.selectedObject.placemark) return
+      this.myMap.geoObjects.remove(this.selectedObject.placemark)
+      this.CancelObject()
+    },
+    clickOnObject (e) {
+      this.CancelObject()
+      const target = e.get('target')
+      target.options.set({
+        preset: 'islands#redStarCircleIcon',
+        draggable: true
+      })
+      const coord = e.get('coords')
+      const prop = target.properties.getAll()
+      this.selectedObject = {
+        coord: coord,
+        iconContent: prop.iconContent,
+        hintContent: prop.hintContent,
+        balloonContentHeader: prop.balloonContentHeader,
+        balloonContentBody: prop.balloonContentBody,
+        balloonContentFooter: prop.balloonContentFooter,
+        placemark: target
+      }
+      this.showForm = true
+    },
+    dragObject (e) {
+      if (this.selectedObject && this.selectedObject.placemark && this.selectedObject.placemark.geometry) {
+        const coord = this.selectedObject.placemark.geometry.getCoordinates()
+        this.selectedObject.coord = coord.slice()
+      }
+    },
+    SaveObject (copy) {
+      this.selectedObject.placemark.properties.set({
+        iconContent: this.selectedObject.iconContent,
+        hintContent: this.selectedObject.hintContent,
+        balloonContentHeader: this.selectedObject.balloonContentHeader,
+        balloonContentBody: this.selectedObject.balloonContentBody,
+        balloonContentFooter: this.selectedObject.balloonContentFooter
+      })
+      if (copy) {
+        if (this.selectedObject.placemark) {
+          this.selectedObject.placemark.options.set({
+            preset: 'islands#redCircleDotIcon',
+            draggable: true
+          })
+        }
+        this.addObject(copy)
+      } else {
+        this.CancelObject()
+      }
+    },
+    CancelObject () {
+      if (this.selectedObject.placemark) {
+        this.selectedObject.placemark.options.set({
+          preset: 'islands#redCircleDotIcon',
+          draggable: true
+        })
+      }
+      this.showForm = false
+      this.selectedObject = {
+        coord: ['', ''],
+        iconContent: '',
+        hintContent: '',
+        balloonContentHeader: '',
+        balloonContentBody: '',
+        balloonContentFooter: '',
+        placemark: undefined
+      }
+    },
+    // ****************** image & file ************
     onFileChange (e) {
       let files = e.target.files || e.dataTransfer.files
       if (!files.length) {
@@ -397,7 +369,7 @@ export default {
       const fileName = file.name
       this.$store.dispatch('imageToStorage', {file: file, fileName: fileName}).then(url => {
         console.log('load IMAGE url = ', url)
-        this.selectedObject.balloonContentBody += ('<img src="' + url + '" width="300">')
+        this.selectedObject.balloonContentBody += ('<br><img src="' + url + '" width="300"><br>')
       })
     },
     saveMap () {
@@ -461,29 +433,11 @@ export default {
     },
     downloadsMapList () {
       this.$store.dispatch('downloadsMapListFromDB')
-    },
-    addButtonInEditor() {
-      this.selectedObject.balloonContentBody += `<a href="${this.btnHref}" class="button-in-balloon">${this.btnCaption}</a>`
-    },
-    onIconFileChange() {
-
-    },
-    saveBtnConfig (cfg) {
-      this.btnHref = cfg.href
-      this.btnCaption = cfg.caption
-      this.showModalButtonSetting=false
     }
   },
-  computed: {
-    ...mapGetters(['maps']),
-    presetOptions () {
-      return {
-        preset: 'islands#' + this.iconColor[this.selectedIconTableColor-1] + this.iconName[this.selectedIcon], // 'islands#redStarCircleIcon',
-        draggable: true,
-        visible: true
-      }
+    computed: {
+      ...mapGetters(['maps'])
     }
-  }
 }
 </script>
 
@@ -491,192 +445,17 @@ export default {
 @import "~spectre.css/src/_variables.scss";
   #map {
     height: 100%;
-
   }
+
+  .map-edit-container {
     .log-out-btn {
       position: fixed;
       top: 0;
       right: -10px;
     }
-  .map-edit-container {
-    height: 100vh;
     .text-section, .tabs-section {
       height: 3rem;
     }
-    .config-box-container {
-      position: relative;
-      // height: calc(100%-3rem);
-      .map-config-box {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        transform: translateX(0);
-        width: 100%;
-        &.disabled {
-          opacity: 0;
-        }
-
-        padding: 1rem;
-        .divider {
-          margin-top: 1rem;
-          margin-bottom: 1rem;
-        }
-        .form-label {
-          min-width: 7rem;
-        }
-        .icon-select-column {
-          .icon-img {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 3rem;
-            width: 3rem;
-            &:last-child {
-              width: 5rem;
-            }
-            &:hover {
-              border: 1px dotted red;
-              border-radius: 3px;
-            }
-            &.selected {
-              border: 2px dotted red;
-              border-radius: 3px;
-            }
-          }
-        }
-
-        .icon-color-table {
-          td {
-            width: 50px;
-            height: 20px;
-            &.selected {
-              transform: scale(1.3);
-            }
-          }
-        }
-
-        .load-img-container {
-          margin-top: 1rem;
-          position: relative;
-
-          .loading-img-box {
-            position: absolute;
-            bottom: 0;
-            right: 1rem;
-
-            border: 1px dotted lightgrey;
-            border-radius: 4px;
-            &.selected {
-              border: 2px dotted red;
-            }
-            width: 5rem;
-            height: 5rem;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            img {
-              max-width: 4rem;
-              max-height: 4rem;
-            }
-          }
-        }
-
-        .map-btn-form-container {
-          align-items: center;
-          justify-content: flex-start;
-          .map-btn-warper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 4rem;
-            width: 8rem;
-            &.selected {
-              border: 2px dotted red;
-              border-radius: 4px;
-            }
-            .btn {
-              margin-right: 0px;
-              margin-bottom: 0px;
-            }
-          }
-        }
-
-        .map-btn-color-select-container {
-          position: relative;
-          .for-btn-color-picker {
-            position: absolute;
-            width: auto;
-            left: -6rem;
-            bottom: 0;
-            z-index: 100;
-          }
-        }
-      }
-      .objects-config-box {
-        .column {
-          padding: 0;
-        }
-        .d-flex {
-          align-items: center;
-        }
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        transform: translateX(100%);
-        transition: transform .25s ease;
-        z-index: 100;
-        opacity: 1;
-        background-color: #fff;
-        /*
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        .column {
-          flex: 0 1 auto;
-        }
-        */
-        padding: 1rem;
-        &.active {
-          transform: translateX(0);
-          z-index: 100;
-          opacity: 1;
-        }
-        .form-label {
-          min-width: 10rem;
-        }
-        .tiny-mce-container {
-          flex-grow: 2;
-          min-height: 340px;
-        }
-      }
-    }
-    // a.button-in-balloon {
-    //   background-color: #4CAF50; /* Green */
-    //   border-width: 1px;
-    //   border-style: solid;
-    //   border-color: rgba(35, 82, 36, 0.802);
-    //   border-radius: 4px;
-    //   color: white;
-    //   padding: 4px 12px;
-    //   text-align: center;
-    //   text-decoration: none;
-    //   display: inline-block;
-    //   font-size: 12px;
-    //   font-weight: 300;
-    //   margin: 4px 2px;
-    //   cursor: pointer;
-    //   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-
-    //   &:hover {
-    //     background-color: rgb(136, 202, 138); /* Green */
-    //     box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
-    //     color: white;
-    //   }
-    // }
   }
   .btn {
     margin-right: 10px;

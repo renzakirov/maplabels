@@ -1,5 +1,3 @@
-const webpack = require('webpack')
-
 module.exports = {
   /*
    ** Headers of the page
@@ -47,12 +45,7 @@ module.exports = {
         //   exclude: /(node_modules)/
         // })
       }
-    },
-    plugins: [
-      new webpack.ProvidePlugin({
-        'window.Quill': 'quill'
-      })
-    ]
+    }
   },
   plugins: [
     '~plugins/nuxt-plugin.js',
@@ -66,6 +59,7 @@ module.exports = {
     'quill/dist/quill.bubble.css',
     'quill/dist/quill.core.css',
     'spectre.css/src/spectre.scss',
+    'spectre.css/src/spectre-icons.scss',
     '@/assets/css/main.scss'
   ],
   mode: 'spa'

@@ -1,7 +1,21 @@
-# PAGES
+#TODO
 
-This directory contains your Application Views and Routes.
-The framework reads all the .vue files inside this directory and create the router of your application.
+diferent scroll: map & settings
 
-More information about the usage of this directory in the documentation:
-https://nuxtjs.org/guide/routing
+после сохранения карты перечитать карты или перечитывать карты по нажатию "Открыть карту"
+
+Не обновляется страница после логин а по емелу
+
+Сделать ждя кнопки стили по-умолчанию - сейчас просто строка
+
+Сохранение и загрузка стиля кнопки
+
+Сделать конфигурирование ховера кнопки
+
+После изменения иконки или цвета иконки - переделать все иконки на карте (или не нужно - но тогда писать в базу options разные для всех объектов)
+
+Сохранять и читать из базы иконку
+
+Сделать загрузку иконки из файла
+
+ 

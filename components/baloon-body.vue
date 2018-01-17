@@ -1,18 +1,15 @@
 <template>
-  <div class="quill-container">
-    <quill-editor class="quill-editor"
-      :content="syncHtml"
-      ref="myQuillEditor"
-      :options="editorOption"
-      @change="onEditorChange($event)"
-      @ready="onEditorReady($event)">
-    </quill-editor>
-  </div>
+  <tinymce id="d1" v-model="syncHtml"></tinymce>
 </template>
 
 <script>
+import tinymce from 'vue-tinymce-editor'
+
 export default {
   name: 'BaloonBody',
+  components: {
+    tinymce: 'tinymce'
+  },
   props: ['syncHtml'],
   data () {
     return {
