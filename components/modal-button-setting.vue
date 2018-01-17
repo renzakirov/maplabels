@@ -94,7 +94,51 @@ import { Sketch } from 'vue-color'
 
 export default {
   name: 'modalButtonSetting',
-  props: ['show'],
+  props: {
+    show: {
+      default: false
+    },
+    cfg: {
+      default: {
+        btnText: 'Открыть',
+        btnHref: '#',
+        btnColor: {
+          hex: '#194d33'
+        },
+        pickerBackground: false,
+        pickerColor: false,
+        pickerBorder: false,
+        backgroundColor: {
+          hex: '#26C475'
+        },
+        fontSize: 14,
+        fontWeight: 500,
+        color: {
+          hex: '#fff'
+        },
+        borderWidth: 1,
+        borderRadius: 3,
+        borderColor: {
+          hex: '#194d33'
+        },
+        shadowWidth: 10,
+        shadowOpacity: .5,
+        padding: {
+          top: 4,
+          right: 20,
+          bottom: 4,
+          left: 12
+        },
+        margin: {
+          top: 4,
+          right: 12,
+          bottom: 4,
+          left: 12
+        },
+        needShadow: true
+      }
+    }
+  },
   components: {
     'sketch-picker': Sketch,
   },
@@ -103,28 +147,8 @@ export default {
       btnText: 'Открыть',
       btnHref: '#',
       btnColor: {
-        hex: '#194d33',
-        hsl: {
-          h: 150,
-          s: 0.5,
-          l: 0.2,
-          a: 1
-        },
-        hsv: {
-          h: 150,
-          s: 0.66,
-          v: 0.30,
-          a: 1
-        },
-        rgba: {
-          r: 25,
-          g: 77,
-          b: 51,
-          a: 1
-        },
-        a: 1
+        hex: '#194d33'
       },
-      btnBorderRadius: 3,
       pickerBackground: false,
       pickerColor: false,
       pickerBorder: false,
@@ -132,12 +156,12 @@ export default {
         hex: '#26C475'
       },
       fontSize: 14,
-      fontWeight: 300,
+      fontWeight: 500,
       color: {
         hex: '#fff'
       },
-      borderWidth: 2,
-      borderRadius: 4,
+      borderWidth: 1,
+      borderRadius: 3,
       borderColor: {
         hex: '#194d33'
       },
@@ -145,7 +169,7 @@ export default {
       shadowOpacity: .5,
       padding: {
         top: 4,
-        right: 12,
+        right: 20,
         bottom: 4,
         left: 12
       },
@@ -163,7 +187,6 @@ export default {
     },
     Save () {
       const style = this.$refs.btnResult.style.cssText
-
       const x = document.createElement('STYLE');
       const a = document.createTextNode(`.button-in-balloon, .button-in-balloon:hover { ${style} }`);
       x.appendChild(a);
@@ -171,7 +194,28 @@ export default {
 
       this.$emit('save', {
         href: this.btnHref,
-        caption: this.btnText
+        caption: this.btnText,
+        style: style,
+        data: {
+          btnText: this.btnText,
+          btnHref: this.btnHref,
+          btnColor: this.btnColor,
+          pickerBackground: this.pickerBackground,
+          pickerColor: this.pickerColor,
+          pickerBorder: this.pickerBorder,
+          backgroundColor: this.backgroundColor,
+          fontSize: this.fontSize,
+          fontWeight: this.fontWeight,
+          color: this.color,
+          borderWidth: this.borderWidth,
+          borderRadius: this.borderRadius,
+          borderColor: this.borderColor,
+          shadowWidth: this.shadowWidth,
+          shadowOpacity: this.shadowOpacity,
+          padding: this.padding,
+          margin: this.margin,
+          needShadow: this.needShadow
+        }
       })
     },
     Cancel () {
