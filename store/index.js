@@ -13,6 +13,11 @@ const createStore = () => {
       },
       maps: (state, getters) => {
         return state.maps
+      },
+      uid: (state) => {
+        if (state.user) {
+          return state.user.uid
+        }
       }
     },
     mutations: {
@@ -20,6 +25,7 @@ const createStore = () => {
         state.user = payload
       },
       load_maps (state, data) {
+        state.maps = {}
         for (let key in data) {
           state.maps[key] = data[key]
           data[key].key = key
@@ -60,22 +66,32 @@ const createStore = () => {
         return fileRef.put(file).then(resp => {
           console.log('Upload image OK')
           return resp.downloadURL
-        }).catch(err => err)
-      },
-      uploadMapToDB ({state}, {json, mapName}) {
-        return mapJson.child(state.user.uid).push({
-          map_name: mapName,
-          map_json: json
-        }).then(resp => {
-          console.log('MAP uploaded')
+        }).catch(err => {
+          return err
         })
       },
-      updateMapToDB ({state}, {key, json, mapName}) {
+      uploadMapToDB ({state}, {json, mapName, style, btn, center, icon}) {
+        return mapJson.child(state.user.uid).push({
+          map_name: mapName,
+          map_style: style,
+          map_center: center,
+          map_json: json,
+          btn_cfg: btn,
+          icon: icon
+        }).then(resp => {
+          console.log('MAP uploaded', resp)
+        })
+      },
+      updateMapToDB ({state}, {key, json, mapName, style, btn, center, icon}) {
         return mapJson.child(state.user.uid + '/' + key).update({
           map_name: mapName,
-          map_json: json
+          map_style: style,
+          map_center: center,
+          map_json: json,
+          btn_cfg: btn,
+          icon: icon
         }).then(resp => {
-          console.log('Map updated')
+          console.log('Map updated', resp)
         })
       },
       downloadsMapListFromDB ({state, commit}) {

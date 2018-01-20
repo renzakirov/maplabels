@@ -1,7 +1,11 @@
 <template>
   <div class="container map-edit-container">
     <button class="btn btn-sm log-out-btn" @click="logout">Log out</button>
-    <modal-button-setting :show="showModalButtonSetting" @close="showModalButtonSetting=false" @save="saveBtnConfig"/>
+    <modal-button-setting ref="btnCfgWin"
+      :show="showModalButtonSetting"
+      @close="showModalButtonSetting=false" @save="saveBtnConfig"/>
+
+    <modal-code ref="modalCodeRef" :show="showModalCode" :code="CODE" @close="showModalCode=false" />
     <div class="columns">
       <div class="column col-6 text-section">
         <h1>ПРИВЕТ</h1>
@@ -35,14 +39,23 @@
             <button class="btn" @click="saveMap">Сохранить карту</button>
           </div>
           <div class="column d-flex mt-2">
-            <label class="form-label">Название карты:</label>
+            <label class="form-label" :style="{width: '11rem'}">Название карты:</label>
             <input class="form-input" type="text" v-model="mapName">
           </div>
           <div class="divider"></div>
           <div class="column d-flex mt-2">
             <label class="form-label">Центр карты:</label>
             <input class="form-input" type="text" v-model="mapCenter">
-            <button class="btn btn-primary" @click="moveMapCenter">Переместить</button>
+            <button class="btn" @click="moveMapCenter">Переместить</button>
+          </div>
+          <div class="column d-flex mt-2">
+            <label class="form-label">Масштаб:</label>
+            <input class="form-input" :style="{width: '5rem'}" type="number" v-model="zoom">
+            <button class="btn" @click="changeZoom">Изменить</button>
+            <label class="form-label tooltip" data-tooltip="Ширина карты на сайте в px или %" style="margin-left: 2rem; min-width: 5rem;">Ширина:</label>
+            <input class="form-input" type="text" v-model="mapWidth">
+            <label class="form-label tooltip" data-tooltip="Высота карты на сайте в px или vh" style="margin-left: 2rem; min-width: 5rem;">Высота:</label>
+            <input class="form-input" type="text" v-model="mapHeight">
           </div>
           <div class="divider"></div>
           <div class="column d-flex mt-2 icon-select-column">
@@ -90,6 +103,9 @@
             <a class="button-in-balloon" @click="showModalButtonSetting=true">Редактировать</a>
           </div>
           <div class="divider"></div>
+          <div class="column d-flex mt-2" style="justify-content: center;">
+            <button class="btn btn-lg btn-success" @click="getCode">Получить код</button>
+          </div>
 
         </div>
 
@@ -126,8 +142,8 @@
           <div class="column d-flex mt-2 add-balloon-btn-container">
             <label class="form-label" style="min-width: 4rem;">Кнопка:</label>
             <a class="button-in-balloon" @click="addButtonInEditor">Добавить</a>
-            <input class="form-input" type="text" v-model="btnHref" placeholder="Ссылка">
-            <input class="form-input" type="text" v-model="btnCaption" placeholder="Надпись">
+            <input class="form-input" type="text" v-model="btnConfig.btnHref" placeholder="Ссылка">
+            <input class="form-input" type="text" v-model="btnConfig.btnCaption" placeholder="Надпись">
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label">Футер окна:</label>
@@ -150,17 +166,22 @@ import { mapGetters } from 'vuex'
 import tinymce from 'vue-tinymce-editor'
 import * as R from 'ramda'
 import modalButtonSetting from '../components/modal-button-setting'
+import modalCode from '../components/modal-code'
 
 export default {
   components: {
     'tinymce': tinymce,
-    'modal-button-setting': modalButtonSetting
+    'modal-button-setting': modalButtonSetting,
+    'modal-code': modalCode
   },
   data () {
     return {
       mapCenter: [47.21331185785009,39.72178182031252],
       showMapBox: true,
       showObjectsBox: false,
+      zoom: 8,
+      mapWidth: '100%',
+      mapHeight: '60vh',
       iconImgFiles: [
         'redIcon.png',
         'redDotIcon.png',
@@ -233,10 +254,16 @@ export default {
         placemark: undefined
       },
       showForm: false,
-      btnHref: '#',
-      btnCaption: 'Открыть',
+      btnConfig: {
+        btnHref: '#',
+        btnCaption: 'Открыть',
+        btnStyle: 'background-color: rgb(38, 196, 117); border-width: 1px; border-style: solid; border-color: rgb(25, 77, 51); border-radius: 3px; color: rgb(255, 255, 255); padding: 4px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 500; margin: 4px 12px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 16px 0px, rgba(0, 0, 0, 0.19) 0px 6px 20px 0px;',
+        data: undefined
+      },
       mapName: 'Новая карта',
-      selectedMap: undefined
+      selectedMap: undefined,
+      showModalCode: false,
+      CODE: 'Здесь будет код!'
     }
   },
   beforeMount () {
@@ -253,8 +280,15 @@ export default {
   },
   mounted () {
     this.$store.dispatch('downloadsMapListFromDB')
+    this.applyBtnStyle()
   },
   methods: {
+    applyBtnStyle () {
+      const x = document.createElement('STYLE');
+      const a = document.createTextNode(`.button-in-balloon, .button-in-balloon:hover { ${this.btnConfig.btnStyle} }`);
+      x.appendChild(a);
+      document.head.appendChild(x);
+    },
     newMap () {
       this.showMapsList = false
       this.selectedMap = undefined
@@ -271,13 +305,19 @@ export default {
       this.selectedObject.coord = this.mapCenter
     },
     changeMapBounds (event) {
-      const mapCenter = event.get('newCenter')
-      this.mapCenter = mapCenter
+      this.mapCenter = event.get('newCenter')
+      this.zoom = event.get('newZoom')
     },
     moveMapCenter () {
       const mapCenter = R.split(',', this.mapCenter)
       if (mapCenter && mapCenter.length == 2 ) {
         this.myMap.setCenter(mapCenter)
+      }
+    },
+    changeZoom () {
+      const z = Number(this.zoom);
+      if (z>0 && z<16) {
+        this.myMap.setZoom(z)
       }
     },
     addObject (copy) {
@@ -376,8 +416,7 @@ export default {
     selectMapItem(map) {
       this.showMapsList = false
       this.selectedMap = map
-      this.mapName = map.map_name
-      this.buildMapFromJson(map.map_json)
+      this.buildMapFromJson(map)
     },
     saveToDB () {
       this.$store.dispatch('saveToDB', this.fileName)
@@ -417,30 +456,89 @@ export default {
           mapObjects.push(mapObj)
         }
       })
+
+      const style = {
+        width: this.mapWidth,
+        height: this.mapHeight,
+        // style: `#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}`
+      }
+      // TODO в первое сохранение нет key !!!
       if (this.selectedMap) {
         this.$store.dispatch('updateMapToDB', {
           key: this.selectedMap.key,
           mapName: this.mapName,
-          json: mapObjects
+          style: style,
+          json: mapObjects,
+          btn: this.btnConfig,
+          center: this.mapCenter,
+          zoom: this.zoom,
+          icon: {
+            preset: this.presetOptions.preset,
+            color: this.iconColor[this.selectedIconTableColor-1],
+            name: this.iconName[this.selectedIcon]
+          }
         }).then(resp => {
           console.log('Map updated')
+          this.$store.dispatch('downloadsMapListFromDB')
         }).catch(err => {
           console.log('Error in map uloading process')
         })
       } else {
         this.$store.dispatch('uploadMapToDB', {
           mapName: this.mapName,
-          json: mapObjects
+          style: style,
+          json: mapObjects,
+          btn: this.btnConfig,
+          center: this.mapCenter,
+          zoom: this.myMap.getZoom(),
+          icon: {
+            preset: this.presetOptions.preset,
+            color: this.iconColor[this.selectedIconTableColor-1],
+            name: this.iconName[this.selectedIcon]
+          }
         }).then(resp => {
-          console.log('Map uploaded to DB')
+          console.log('Map uploaded (make) to DB')
+
+          this.$store.dispatch('downloadsMapListFromDB')
         }).catch(err => {
           console.log('Error in map uloading process')
         })
       }
     },
-    buildMapFromJson (jsonMap) {
-      if (!jsonMap || !this.myMap) return
-      jsonMap.forEach(el => {
+    buildMapFromJson (map) {
+      console.log('buildMapFromJson -> map = ', map)
+      if (!map || !this.myMap) return
+
+      this.mapName = map.map_name
+      this.mapCenter = map.map_center
+      this.myMap.setCenter(this.mapCenter || [45,45])
+
+      this.myMap.setZoom(map.zoom || 8)
+
+      this.mapWidth = map.style ? map.style.width : '100%'
+      this.mapHeight =  map.style ? map.style.height : '60vh'
+
+      const preset = map.icon.preset
+      this.iconColor.forEach((col, i) => {
+        if (col == map.icon.color) {
+          this.selectedIconTableColor = i + 1
+          return
+        }
+      })
+      this.iconName.forEach((name, i) => {
+        if (name == map.icon.name) {
+          this.selectedIcon = i
+          return
+        }
+      })
+
+      this.btnConfig = map.btn_cfg
+      this.applyBtnStyle()
+      this.$refs.btnCfgWin.updateData(this.btnConfig.data)
+
+
+      if (!map.map_json || !map.map_json.length) return
+      map.map_json.forEach(el => {
         console.log('jsonMap.el = ', el)
         let placemark = new window.ymaps.Placemark(el.coord, {
           iconContent: el.iconContent,
@@ -449,8 +547,7 @@ export default {
           balloonContentBody: el.balloonContentBody,
           balloonContentFooter: el.balloonContentFooter
         }, {
-          preset: 'islands#redCircleDotIcon',
-          iconColor: '#ff0000',
+          preset: preset,
           draggable: true,
           visible: true
         })
@@ -463,19 +560,41 @@ export default {
       this.$store.dispatch('downloadsMapListFromDB')
     },
     addButtonInEditor() {
-      this.selectedObject.balloonContentBody += `<a href="${this.btnHref}" class="button-in-balloon">${this.btnCaption}</a>`
+      this.selectedObject.balloonContentBody += `<a href="${this.btnConfig.btnHref}" class="button-in-balloon">${this.btnConfig.btnCaption}</a>`
     },
     onIconFileChange() {
 
     },
     saveBtnConfig (cfg) {
-      this.btnHref = cfg.href
-      this.btnCaption = cfg.caption
+      this.btnConfig.btnHref = cfg.href
+      this.btnConfig.btnCaption = cfg.caption
+      this.btnConfig.btnStyle = cfg.style
+      this.btnConfig.data = cfg.data
       this.showModalButtonSetting=false
+    },
+    getCode () {
+      if (!this.selectedMap || !this.selectedMap.key) {
+        //TODO error msg-s
+        console.log('Нужно создать и сохранить или загрузить карту')
+        return
+      }
+      if (!this.uid) {
+        //TODO error msg-s
+        console.log('uid not finded')
+        return
+      }
+      const baseUrl = `const baseUrl = 'https://maplabel20171228.firebaseio.com/mapjson/${this.uid}/${this.selectedMap.key}.json';`
+
+      this.$refs.modalCodeRef.saveCodeToDB({
+        mapKey: this.selectedMap.key,
+        baseUrl: baseUrl,
+        style: `<style>#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}<` + '/style>'
+      })
+      this.showModalCode = true
     }
   },
   computed: {
-    ...mapGetters(['maps']),
+    ...mapGetters(['maps','uid']),
     presetOptions () {
       return {
         preset: 'islands#' + this.iconColor[this.selectedIconTableColor-1] + this.iconName[this.selectedIcon], // 'islands#redStarCircleIcon',

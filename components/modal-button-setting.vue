@@ -97,46 +97,6 @@ export default {
   props: {
     show: {
       default: false
-    },
-    cfg: {
-      default: {
-        btnText: 'Открыть',
-        btnHref: '#',
-        btnColor: {
-          hex: '#194d33'
-        },
-        pickerBackground: false,
-        pickerColor: false,
-        pickerBorder: false,
-        backgroundColor: {
-          hex: '#26C475'
-        },
-        fontSize: 14,
-        fontWeight: 500,
-        color: {
-          hex: '#fff'
-        },
-        borderWidth: 1,
-        borderRadius: 3,
-        borderColor: {
-          hex: '#194d33'
-        },
-        shadowWidth: 10,
-        shadowOpacity: .5,
-        padding: {
-          top: 4,
-          right: 20,
-          bottom: 4,
-          left: 12
-        },
-        margin: {
-          top: 4,
-          right: 12,
-          bottom: 4,
-          left: 12
-        },
-        needShadow: true
-      }
     }
   },
   components: {
@@ -183,6 +143,26 @@ export default {
     }
   },
   methods: {
+    updateData (cfg) {
+      this.btnText = cfg.btnText
+      this.btnHref = cfg.btnHref
+      this.btnColor = cfg.btnColor
+      this.pickerBackground = cfg.pickerBackground
+      this.pickerColor = cfg.pickerColor
+      this.pickerBorder = cfg.pickerBorder
+      this.backgroundColor = cfg.backgroundColor
+      this.fontSize = cfg.fontSize
+      this.fontWeight = cfg.fontWeight
+      this.color = cfg.color
+      this.borderWidth = cfg.borderWidth
+      this.borderRadius = cfg.borderRadius
+      this.borderColor = cfg.borderColor
+      this.shadowWidth = cfg.shadowWidth
+      this.shadowOpacity = cfg.shadowOpacity
+      this.padding = cfg.padding
+      this.margin = cfg.margin
+      this.needShadow = cfg.needShadow
+    },
     updateColorPicker(val) {
     },
     Save () {
