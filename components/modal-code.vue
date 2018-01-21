@@ -115,6 +115,7 @@ export default {
             console.log('Map not loaded');
             return;
           }
+          console.log('jsonMap = ', map)
           myMap.setCenter(map.map_center || [45,45])
           myMap.setZoom(map.zoom || 8)
 
@@ -122,9 +123,9 @@ export default {
 
           const x = document.createElement('STYLE');
           const a = document.createTextNode('.button-in-balloon, .button-in-balloon:hover {' + map.btn_cfg.btnStyle + '}');
-          //const b = document.createTextNode(map.map_style.style);
+          const b = document.createTextNode(map.map_style.style);
           x.appendChild(a);
-          //x.appendChild(b);
+          x.appendChild(b);
           document.head.appendChild(x);
 
           if (!map.map_json || !map.map_json.length) {
@@ -132,7 +133,7 @@ export default {
             return
           }
           map.map_json.forEach(el => {
-            console.log('jsonMap.el = ', el)
+
             let placemark = new window.ymaps.Placemark(el.coord, {
               iconContent: el.iconContent,
               hintContent: el.hintContent,

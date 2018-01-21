@@ -55,9 +55,6 @@ module.exports = {
     middleware: 'router-auth'
   },
   css: [
-    'quill/dist/quill.snow.css',
-    'quill/dist/quill.bubble.css',
-    'quill/dist/quill.core.css',
     'spectre.css/src/spectre.scss',
     'spectre.css/src/spectre-icons.scss',
     '@/assets/css/main.scss'

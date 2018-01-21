@@ -1,7 +1,8 @@
 <template>
   <div class="container login-form-container">
     <div class="columns">
-      <div class="column col-3 col-mx-auto login-form">
+      <bounce-loader class="column col-1 col-mx-auto" style="margin-top: 30vh;" :loading="loading" :color="'#5755d9'"></bounce-loader>
+      <div class="column col-3 col-mx-auto login-form" v-show="!loading">
         <h3>Вход:</h3>
         <div class="divider"></div>
         <div class="form-group google-login">
@@ -28,11 +29,17 @@
 </template>
 
 <script>
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue'
+
 export default {
+  components: {
+    'bounce-loader': PulseLoader
+  },
   data () {
     return {
       formEmail: '',
-      formPassword: ''
+      formPassword: '',
+      loading: false
     }
   },
   methods: {
@@ -40,33 +47,35 @@ export default {
       this.$store.dispatch('signInWithEmail', {
         email: this.formEmail,
         password: this.formPassword
-      }).then(() => {
+      })
+      this.loading = true
+      setInterval(() => {
         this.formEmail = ''
         this.formPassword = ''
-
-      }).catch((e) => {
-        console.log(e.message);
-      })
+        this.$router.push('/map-edit')
+      }, 3000)
     },
     emailSignUp () {
       this.$store.dispatch('signUpWithEmail', {
         email: this.formEmail,
         password: this.formPassword
-      }).then(() => {
+      })
+      this.loading = true
+      setInterval(() => {
         this.formEmail = ''
         this.formPassword = ''
-        console.log('inside then statement on login');
-      }).catch((e) => {
-        console.log(e.message);
-      })
+        this.$router.push('/map-edit')
+      }, 3000)
     },
     googleSignUp () {
+      this.loading = true
       this.$store.dispatch('signInWithGoogle').then(() => {
         console.log('inside then statement on login');
       }).catch((e) => {
         console.log(e.message);
       })
     }
+
   }
 }
 </script>

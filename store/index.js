@@ -22,6 +22,7 @@ const createStore = () => {
     },
     mutations: {
       setUser (state, payload) {
+        console.log('mutations setUser', payload)
         state.user = payload
       },
       load_maps (state, data) {
@@ -34,9 +35,9 @@ const createStore = () => {
     },
     actions: {
       autoSignIn ({commit}, payload) {
+        console.log('!!!!!!!!!!!!!!! auto sign in ')
         commit('setUser', payload)
       },
-
       signInWithGoogle ({commit}) {
         return new Promise((resolve, reject) => {
           auth.signInWithRedirect(GoogleProvider)
@@ -70,28 +71,37 @@ const createStore = () => {
           return err
         })
       },
-      uploadMapToDB ({state}, {json, mapName, style, btn, center, icon}) {
+      uploadMapToDB ({state}, {json, mapName, style, btn, center, zoom, icon}) {
         return mapJson.child(state.user.uid).push({
           map_name: mapName,
           map_style: style,
           map_center: center,
+          zoom: zoom,
           map_json: json,
           btn_cfg: btn,
           icon: icon
         }).then(resp => {
-          console.log('MAP uploaded', resp)
+          return resp
         })
       },
-      updateMapToDB ({state}, {key, json, mapName, style, btn, center, icon}) {
+      updateMapToDB ({state}, {key, json, mapName, style, btn, center, zoom, icon}) {
         return mapJson.child(state.user.uid + '/' + key).update({
           map_name: mapName,
           map_style: style,
           map_center: center,
+          zoom: zoom,
           map_json: json,
           btn_cfg: btn,
           icon: icon
         }).then(resp => {
-          console.log('Map updated', resp)
+          return resp
+        })
+      },
+      deleteMapFromDB ({state}, key) {
+        console.log('=== in deleteMapFromDB')
+        return mapJson.child(state.user.uid + '/' + key).remove().then(resp => {
+          console.log('Map Deleted')
+          return resp
         })
       },
       downloadsMapListFromDB ({state, commit}) {
@@ -100,6 +110,7 @@ const createStore = () => {
           commit('load_maps', resp.val())
         }).catch(err => {
           console.log('Downloads maps ERROR:', err)
+          return err
         })
       }
     }

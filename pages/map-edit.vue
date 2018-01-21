@@ -24,6 +24,7 @@
         <div id="map" :style="{height: '90vh', width: '100%', margin: 'auto', 'background-color':'lightgrey'}"></div>
       </div>
       <div class="column col-6 config-box-container">
+
         <div class="map-config-box" :class="{disabled: !showMapBox}">
           <div class="divider"></div>
           <div class="column">
@@ -31,12 +32,22 @@
             <div class="dropdown" :class="{active: showMapsList}">
               <button class="btn" @click="showMapsList = !showMapsList">Загрузить карту</button>
               <ul class="menu" :class="{active: showMapsList}" v-show="showMapsList">
-                <li class="menu-item" v-if="maps" v-for="map in maps" :key="map.map_name" @click="selectMapItem(map)">
+                <li class="menu-item" v-if="maps" v-for="map in maps" :key="map.key" @click="selectMapItem(map)">
                   {{map.map_name}}
                 </li>
+                <li class="menu-item" v-else>Нет сохраненных карт</li>
               </ul>
             </div>
             <button class="btn" @click="saveMap">Сохранить карту</button>
+            <div class="dropdown" :class="{active: showMapsDel}">
+              <button class="btn btn-error" @click="showMapsDel = !showMapsDel">Удалить карту</button>
+              <ul class="menu" :class="{active: showMapsDel}" v-show="showMapsDel">
+                <li class="menu-item" v-if="maps" v-for="map in maps" :key="map.key" @click="deleteMap(map)">
+                  {{map.map_name}}
+                </li>
+                <li class="menu-item" v-else>Нет сохраненных карт</li>
+              </ul>
+            </div>
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label" :style="{width: '11rem'}">Название карты:</label>
@@ -70,20 +81,20 @@
           <div class="column d-flex mt-2">
             <label class="form-label">Цвет иконки:</label>
             <table class="icon-color-table" border>
-                <tbody>
-                  <tr>
-                    <td v-for="i in 8" :key="iconTableColors[i]"
-                    :style="{'background-color': iconTableColors[i]}"
-                    :class="{selected: i === selectedIconTableColor && selectedIcon !== -1}"
-                    @click="selectedIconTableColor = i"></td>
-                  </tr>
-                  <tr>
-                    <td v-for="i in 8" :key="iconTableColors[i+8]"
-                    :style="{'background-color': iconTableColors[i+8]}"
-                    :class="{selected: i+8 === selectedIconTableColor && selectedIcon !== -1}"
-                    @click="selectedIconTableColor = i+8"></td>
-                  </tr>
-                </tbody>
+              <tbody>
+                <tr>
+                  <td v-for="i in 8" :key="iconTableColors[i]"
+                  :style="{'background-color': iconTableColors[i]}"
+                  :class="{selected: i === selectedIconTableColor && selectedIcon !== -1}"
+                  @click="selectedIconTableColor = i"></td>
+                </tr>
+                <tr>
+                  <td v-for="i in 8" :key="iconTableColors[i+8]"
+                  :style="{'background-color': iconTableColors[i+8]}"
+                  :class="{selected: i+8 === selectedIconTableColor && selectedIcon !== -1}"
+                  @click="selectedIconTableColor = i+8"></td>
+                </tr>
+              </tbody>
             </table>
           </div>
           <div class="column d-flex load-img-container">
@@ -106,9 +117,7 @@
           <div class="column d-flex mt-2" style="justify-content: center;">
             <button class="btn btn-lg btn-success" @click="getCode">Получить код</button>
           </div>
-
         </div>
-
 
         <div class="objects-config-box" :class="{active: showObjectsBox}">
           <div class="column d-flex mt-2">
@@ -241,6 +250,7 @@ export default {
 
       datatinymce: 'data tinymce',
       showMapsList: false,
+      showMapsDel: false,
       myMap: {},
       mapInJson: {},
       mapObjects: [],
@@ -251,17 +261,18 @@ export default {
         balloonContentHeader: '',
         balloonContentBody: '',
         balloonContentFooter: '',
-        placemark: undefined
+        placemark: null
       },
       showForm: false,
       btnConfig: {
         btnHref: '#',
         btnCaption: 'Открыть',
         btnStyle: 'background-color: rgb(38, 196, 117); border-width: 1px; border-style: solid; border-color: rgb(25, 77, 51); border-radius: 3px; color: rgb(255, 255, 255); padding: 4px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 500; margin: 4px 12px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 16px 0px, rgba(0, 0, 0, 0.19) 0px 6px 20px 0px;',
-        data: undefined
+        data: null
       },
+      btnDefaultStyle: 'background-color: rgb(38, 196, 117); border-width: 1px; border-style: solid; border-color: rgb(25, 77, 51); border-radius: 3px; color: rgb(255, 255, 255); padding: 4px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 500; margin: 4px 12px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 16px 0px, rgba(0, 0, 0, 0.19) 0px 6px 20px 0px;',
       mapName: 'Новая карта',
-      selectedMap: undefined,
+      selectedMap: null,
       showModalCode: false,
       CODE: 'Здесь будет код!'
     }
@@ -291,8 +302,9 @@ export default {
     },
     newMap () {
       this.showMapsList = false
-      this.selectedMap = undefined
+      this.selectedMap = null
       this.mapName = 'Новая карта'
+      // this.clearMapObjects()
       this.CancelObject ()
       if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) this.myMap.geoObjects.removeAll()
     },
@@ -316,7 +328,7 @@ export default {
     },
     changeZoom () {
       const z = Number(this.zoom);
-      if (z>0 && z<16) {
+      if (z>0 && z<20) {
         this.myMap.setZoom(z)
       }
     },
@@ -410,10 +422,19 @@ export default {
         balloonContentFooter: '',
         placemark: undefined
       }
-
+    },
+    clearMapObjects () {
+      if (!this.myMap) return
+      this.myMap.geoObjects.each((obj) => {
+        this.myMap.geoObjects.remove(obj)
+      })
     },
     // ****************** image & file ************
     selectMapItem(map) {
+      // this.clearMapObjects()
+      if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) {
+        this.myMap.geoObjects.removeAll()
+      }
       this.showMapsList = false
       this.selectedMap = map
       this.buildMapFromJson(map)
@@ -439,7 +460,10 @@ export default {
         this.selectedObject.balloonContentBody += ('<img src="' + url + '" width="300">')
       })
     },
+    // НАЖАЛИ КНОПКУ СОХРАНИТЬ КАРТУ
     saveMap () {
+      if (!this.myMap) return
+
       let mapObjects = []
       this.myMap.geoObjects.each((obj) => {
         const coord = obj.geometry.getCoordinates()
@@ -460,9 +484,8 @@ export default {
       const style = {
         width: this.mapWidth,
         height: this.mapHeight,
-        // style: `#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}`
+        style: `#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}`
       }
-      // TODO в первое сохранение нет key !!!
       if (this.selectedMap) {
         this.$store.dispatch('updateMapToDB', {
           key: this.selectedMap.key,
@@ -497,20 +520,38 @@ export default {
             name: this.iconName[this.selectedIcon]
           }
         }).then(resp => {
-          console.log('Map uploaded (make) to DB')
-
-          this.$store.dispatch('downloadsMapListFromDB')
+          const key = resp ? resp.key : ''
+          return this.$store.dispatch('downloadsMapListFromDB').then(() => {
+            if (this.maps[key]) {
+              this.selectedMap = this.maps[key]
+            }
+          })
         }).catch(err => {
           console.log('Error in map uloading process')
         })
       }
     },
+    deleteMap (map) {
+      console.log('******* Delete', map, map.key)
+      this.showMapsDel = false
+      if (!this.myMap || !map || !map.key) return
+      if (this.selectedMap && (this.selectedMap.key == map.key)) {
+        console.log('******* Delete', map.key)
+        this.newMap()
+      }
+      console.log('Delete!!!!', map.key)
+      this.$store.dispatch('deleteMapFromDB', map.key).then(resp => {
+        console.log('Map deleted')
+        this.$store.dispatch('downloadsMapListFromDB')
+      })
+    },
+    // создает карту из JSON после выбора из выпадающего списка
     buildMapFromJson (map) {
       console.log('buildMapFromJson -> map = ', map)
       if (!map || !this.myMap) return
 
-      this.mapName = map.map_name
-      this.mapCenter = map.map_center
+      this.mapName = map.map_name || 'Новая карта'
+      this.mapCenter = map.map_center || [45,45]
       this.myMap.setCenter(this.mapCenter || [45,45])
 
       this.myMap.setZoom(map.zoom || 8)
@@ -518,28 +559,43 @@ export default {
       this.mapWidth = map.style ? map.style.width : '100%'
       this.mapHeight =  map.style ? map.style.height : '60vh'
 
-      const preset = map.icon.preset
-      this.iconColor.forEach((col, i) => {
-        if (col == map.icon.color) {
-          this.selectedIconTableColor = i + 1
-          return
-        }
-      })
-      this.iconName.forEach((name, i) => {
-        if (name == map.icon.name) {
-          this.selectedIcon = i
-          return
-        }
-      })
+      const preset = map.icon.preset || 'islands#nightCircleDotIcon'
 
-      this.btnConfig = map.btn_cfg
+      if (map.icon && map.icon.color) {
+        this.iconColor.forEach((col, i) => {
+          if (col == map.icon.color) {
+            this.selectedIconTableColor = i + 1
+          }
+        })
+      } else {
+        this.selectedIconTableColor = 1
+      }
+
+      if (map.icon && map.icon.name) {
+        this.iconName.forEach((name, i) => {
+          if (name == map.icon.name) {
+            this.selectedIcon = i
+          }
+        })
+      } else {
+        this.selectedIcon = 1
+      }
+
+      if (!map.btn_cfg) {
+        map.btn_cfg = {}
+      }
+
+      this.btnConfig = map.btn_cfg // { btnCaption, btnHref, btnStyle, data }
+      if (!this.btnConfig.btnCaption) this.btnConfig.btnCaption = 'Подробнее'
+      if (!this.btnConfig.btnHref) this.btnConfig.btnHref = '#'
+      if (!this.btnConfig.btnStyle) this.btnConfig.btnStyle = this.btnDefaultStyle
+
       this.applyBtnStyle()
-      this.$refs.btnCfgWin.updateData(this.btnConfig.data)
-
+      if (this.btnConfig.data) this.$refs.btnCfgWin.updateData(this.btnConfig.data)
 
       if (!map.map_json || !map.map_json.length) return
       map.map_json.forEach(el => {
-        console.log('jsonMap.el = ', el)
+        // console.log('jsonMap.el = ', el)
         let placemark = new window.ymaps.Placemark(el.coord, {
           iconContent: el.iconContent,
           hintContent: el.hintContent,
@@ -563,7 +619,7 @@ export default {
       this.selectedObject.balloonContentBody += `<a href="${this.btnConfig.btnHref}" class="button-in-balloon">${this.btnConfig.btnCaption}</a>`
     },
     onIconFileChange() {
-
+      // TODO сделать чтобы менялись все иконки после выбора новой иконки по-умолчанию ???
     },
     saveBtnConfig (cfg) {
       this.btnConfig.btnHref = cfg.href
@@ -572,6 +628,7 @@ export default {
       this.btnConfig.data = cfg.data
       this.showModalButtonSetting=false
     },
+    // формирует данные для компоненты которая генерирует код для вставки в Тильду
     getCode () {
       if (!this.selectedMap || !this.selectedMap.key) {
         //TODO error msg-s
@@ -588,7 +645,7 @@ export default {
       this.$refs.modalCodeRef.saveCodeToDB({
         mapKey: this.selectedMap.key,
         baseUrl: baseUrl,
-        style: `<style>#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}<` + '/style>'
+        style: `<style>#map${this.selectedMap.key} {min-width:200px;min-height:200px;}<` + '/style>'
       })
       this.showModalCode = true
     }
@@ -612,11 +669,11 @@ export default {
     height: 100%;
 
   }
-    .log-out-btn {
-      position: fixed;
-      top: 0;
-      right: -10px;
-    }
+  .log-out-btn {
+    position: fixed;
+    top: 0;
+    right: -10px;
+  }
   .map-edit-container {
     height: 100vh;
     .text-section, .tabs-section {
@@ -624,13 +681,14 @@ export default {
     }
     .config-box-container {
       position: relative;
-      // height: calc(100%-3rem);
       .map-config-box {
+        overflow: auto;
         position: absolute;
         top: 0;
         bottom: 0;
         transform: translateX(0);
         width: 100%;
+        padding-left: 1rem;
         &.disabled {
           opacity: 0;
         }
@@ -740,24 +798,16 @@ export default {
         .d-flex {
           align-items: center;
         }
+        overflow: auto;
         position: absolute;
         top: 0;
         bottom: 0;
         width: 100%;
-        height: 100%;
         transform: translateX(100%);
         transition: transform .25s ease;
         z-index: 100;
         opacity: 1;
         background-color: #fff;
-        /*
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        .column {
-          flex: 0 1 auto;
-        }
-        */
         padding: 1rem;
         &.active {
           transform: translateX(0);
@@ -773,29 +823,7 @@ export default {
         }
       }
     }
-    // a.button-in-balloon {
-    //   background-color: #4CAF50; /* Green */
-    //   border-width: 1px;
-    //   border-style: solid;
-    //   border-color: rgba(35, 82, 36, 0.802);
-    //   border-radius: 4px;
-    //   color: white;
-    //   padding: 4px 12px;
-    //   text-align: center;
-    //   text-decoration: none;
-    //   display: inline-block;
-    //   font-size: 12px;
-    //   font-weight: 300;
-    //   margin: 4px 2px;
-    //   cursor: pointer;
-    //   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 
-    //   &:hover {
-    //     background-color: rgb(136, 202, 138); /* Green */
-    //     box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
-    //     color: white;
-    //   }
-    // }
   }
   .btn {
     margin-right: 10px;
