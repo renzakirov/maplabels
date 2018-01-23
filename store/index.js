@@ -71,15 +71,9 @@ const createStore = () => {
           return err
         })
       },
-      uploadMapToDB ({state}, {json, mapName, style, btn, center, zoom, icon}) {
+      uploadMapToDB ({state}, mapName) {
         return mapJson.child(state.user.uid).push({
-          map_name: mapName,
-          map_style: style,
-          map_center: center,
-          zoom: zoom,
-          map_json: json,
-          btn_cfg: btn,
-          icon: icon
+          map_name: mapName || 'Новая карта'
         }).then(resp => {
           return resp
         })

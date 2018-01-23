@@ -35,7 +35,7 @@ export default {
     Cancel () {
       this.$emit('close')
     },
-    saveCodeToDB ({mapKey, baseUrl, style}) {
+    setCode ({mapKey, baseUrl}) {
       this.mapJsonURL = baseUrl
       this.mapKey = mapKey
 
@@ -47,8 +47,7 @@ export default {
       }).then(url => {
         console.log(url)
         this.codeUrl = url
-        this.code = style
-        this.code = this.code + `<script src="${url}" type="text/javascript"></` + 'script>'
+        this.code = `<script src="${url}" type="text/javascript"></` + 'script>'
         this.code = this.code + `<div id="map${mapKey}"></div>`
       }).catch(err => {
         console.log('Error', err)
@@ -66,6 +65,7 @@ export default {
   computed: {
     js () {
       return `
+
         let myMap;
         const yandexMapScript = document.createElement('SCRIPT')
         yandexMapScript.setAttribute('src', 'https://api-maps.yandex.ru/2.1/?lang=ru_RU')
@@ -74,15 +74,28 @@ export default {
         document.body.appendChild(yandexMapScript)
         yandexMapScript.onload = () => {
           window.ymaps.ready(() => {
-            map_init()
+            $.getJSON(baseUrl, buildMapFromJson);
           })
         }
 
-        function map_init() {
-        // Инициализируем карту.
+        function buildMapFromJson (map) {
+          if (!map) {
+            console.log('Json with map data not loaded');
+            return;
+          }
+          console.log('jsonMap = ', map)
+
+          const x = document.createElement('STYLE');
+          const a = document.createTextNode('.button-in-balloon, .button-in-balloon:hover {' + map.btn_cfg.btnStyle + '}');
+          const b = document.createTextNode(map.map_style.style);
+          x.appendChild(a);
+          x.appendChild(b);
+          document.head.appendChild(x);
+
+          // Инициализируем карту.
           myMap = new ymaps.Map('map${this.mapKey}', {
-            center: [47.219861612023976,39.732081502929695],
-            zoom: 8,
+            center: map.map_center || [47.219861612023976,39.732081502929695],
+            zoom: map.zoom || 8,
             controls: ['zoomControl', 'searchControl', 'fullscreenControl', 'geolocationControl']
           }, {
             suppressMapOpenBlock: true
@@ -102,31 +115,12 @@ export default {
             height: '10%'
           });
 
-          $.getJSON(baseUrl, buildMapFromJson);
-
-        }
-
-        function buildMapFromJson (map) {
-          if (!map) {
-            console.log('Json with map data not loaded');
-            return;
-          }
           if (!myMap) {
-            console.log('Map not loaded');
+            console.log('Map not created');
             return;
           }
-          console.log('jsonMap = ', map)
-          myMap.setCenter(map.map_center || [45,45])
-          myMap.setZoom(map.zoom || 8)
 
           const preset = map.icon.preset
-
-          const x = document.createElement('STYLE');
-          const a = document.createTextNode('.button-in-balloon, .button-in-balloon:hover {' + map.btn_cfg.btnStyle + '}');
-          const b = document.createTextNode(map.map_style.style);
-          x.appendChild(a);
-          x.appendChild(b);
-          document.head.appendChild(x);
 
           if (!map.map_json || !map.map_json.length) {
             console.log('Map objects data not found');

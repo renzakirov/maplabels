@@ -29,23 +29,21 @@
           <div class="divider"></div>
           <div class="column">
             <button class="btn" @click="newMap">Новая карта</button>
-            <div class="dropdown" :class="{active: showMapsList}">
+            <div class="dropdown" :class="{active: showMapsList}" v-if="maps" >
               <button class="btn" @click="showMapsList = !showMapsList">Загрузить карту</button>
               <ul class="menu" :class="{active: showMapsList}" v-show="showMapsList">
-                <li class="menu-item" v-if="maps" v-for="map in maps" :key="map.key" @click="selectMapItem(map)">
+                <li class="menu-item" v-for="map in maps" :key="map.key" @click="selectMapItem(map)">
                   {{map.map_name}}
                 </li>
-                <li class="menu-item" v-else>Нет сохраненных карт</li>
               </ul>
             </div>
             <button class="btn" @click="saveMap">Сохранить карту</button>
-            <div class="dropdown" :class="{active: showMapsDel}">
+            <div class="dropdown" :class="{active: showMapsDel}" v-if="maps">
               <button class="btn btn-error" @click="showMapsDel = !showMapsDel">Удалить карту</button>
               <ul class="menu" :class="{active: showMapsDel}" v-show="showMapsDel">
-                <li class="menu-item" v-if="maps" v-for="map in maps" :key="map.key" @click="deleteMap(map)">
+                <li class="menu-item" v-for="map in maps" :key="map.key" @click="deleteMap(map)">
                   {{map.map_name}}
                 </li>
-                <li class="menu-item" v-else>Нет сохраненных карт</li>
               </ul>
             </div>
           </div>
@@ -127,6 +125,7 @@
           <div class="column d-flex mt-2">
             <label class="form-label">Координаты:</label>
             <input class="form-input" type="text" v-model="selectedObject.coord">
+            <button class="btn" style="margin-right:0;margin-bottom:0;" @click="moveCoordinate">Переместить</button>
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label">Подпись к иконке:</label>
@@ -142,11 +141,11 @@
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label">Загрузить картинку:</label>
-            <input class="form-input" type="file" name="fileUpload" @change="onFileChange">
+            <input class="form-input" type="file" name="fileUpload" :value="imageFile" @change="onFileChange">
           </div>
 
           <div class="column mt-2 tiny-mce-container">
-            <tinymce id="d1" v-model="selectedObject.balloonContentBody"></tinymce>
+            <tinymce id="d1" :toolbar1="toolbar1" :other_options="other_options" v-model="selectedObject.balloonContentBody"></tinymce>
           </div>
           <div class="column d-flex mt-2 add-balloon-btn-container">
             <label class="form-label" style="min-width: 4rem;">Кнопка:</label>
@@ -185,6 +184,9 @@ export default {
   },
   data () {
     return {
+      toolbar1: 'formatselect | bold italic strikethrough forecolor backcolor | link | alignleft aligncenter alignright alignjustify | numlist bullist outdent indent | fontsizeselect | removeformat',
+      other_options: {height: 200},
+      imageFile: undefined,
       mapCenter: [47.21331185785009,39.72178182031252],
       showMapBox: true,
       showObjectsBox: false,
@@ -246,9 +248,7 @@ export default {
       selectedIconTableColor: 2,
       loadingImg: '',
       showModalButtonSetting: false,
-      selectedBtn: undefined,
 
-      datatinymce: 'data tinymce',
       showMapsList: false,
       showMapsDel: false,
       myMap: {},
@@ -266,7 +266,7 @@ export default {
       showForm: false,
       btnConfig: {
         btnHref: '#',
-        btnCaption: 'Открыть',
+        btnCaption: 'Подробнее',
         btnStyle: 'background-color: rgb(38, 196, 117); border-width: 1px; border-style: solid; border-color: rgb(25, 77, 51); border-radius: 3px; color: rgb(255, 255, 255); padding: 4px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; font-weight: 500; margin: 4px 12px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 16px 0px, rgba(0, 0, 0, 0.19) 0px 6px 20px 0px;',
         data: null
       },
@@ -293,6 +293,18 @@ export default {
     this.$store.dispatch('downloadsMapListFromDB')
     this.applyBtnStyle()
   },
+  watch: {
+    selectedIcon (newV, oldV) {
+      if (newV && newV !== oldV) {
+        this.$nextTick(this.changeMapIcons)
+      }
+    },
+    selectedIconTableColor (newV, oldV) {
+      if (newV && newV !== oldV) {
+        this.$nextTick(this.changeMapIcons)
+      }
+    }
+  },
   methods: {
     applyBtnStyle () {
       const x = document.createElement('STYLE');
@@ -304,9 +316,8 @@ export default {
       this.showMapsList = false
       this.selectedMap = null
       this.mapName = 'Новая карта'
-      // this.clearMapObjects()
       this.CancelObject ()
-      if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) this.myMap.geoObjects.removeAll()
+      this.clearMapObjects()
     },
     item_map_init () {
       this.myMap = new window.ymaps.Map('map', {
@@ -330,6 +341,13 @@ export default {
       const z = Number(this.zoom);
       if (z>0 && z<20) {
         this.myMap.setZoom(z)
+      }
+    },
+    changeMapIcons () {
+      if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) {
+        this.myMap.geoObjects.each((obj) => {
+          obj.options.set(this.presetOptions)
+        })
       }
     },
     addObject (copy) {
@@ -386,6 +404,14 @@ export default {
         this.selectedObject.coord = coord.slice()
       }
     },
+    moveCoordinate () {
+      let coord = R.split(',', this.selectedObject.coord)
+      if (coord && coord.length == 2 && this.selectedObject && this.selectedObject.placemark && this.selectedObject.placemark.geometry) {
+        this.selectedObject.placemark.geometry.setCoordinates(coord)
+        coord = this.selectedObject.placemark.geometry.getCoordinates()
+        if (coord && coord.slice()) this.selectedObject.coord = coord.slice()
+      }
+    },
     SaveObject (copy) {
       if (!this.selectedObject.placemark || !this.selectedObject.placemark.properties || !this.selectedObject.placemark.options || !this.selectedObject.placemark.balloon) {
         console.log('Error in SaveObject method')
@@ -424,17 +450,13 @@ export default {
       }
     },
     clearMapObjects () {
-      if (!this.myMap) return
-      this.myMap.geoObjects.each((obj) => {
-        this.myMap.geoObjects.remove(obj)
-      })
-    },
-    // ****************** image & file ************
-    selectMapItem(map) {
-      // this.clearMapObjects()
       if (this.myMap && this.myMap.geoObjects && this.myMap.geoObjects.getLength()) {
         this.myMap.geoObjects.removeAll()
       }
+    },
+    // ****************** image & file ************
+    selectMapItem(map) {
+      this.clearMapObjects()
       this.showMapsList = false
       this.selectedMap = map
       this.buildMapFromJson(map)
@@ -458,12 +480,33 @@ export default {
       this.$store.dispatch('imageToStorage', {file: file, fileName: fileName}).then(url => {
         console.log('load IMAGE url = ', url)
         this.selectedObject.balloonContentBody += ('<img src="' + url + '" width="300">')
+        e.target.files = null
+        e = null
       })
     },
     // НАЖАЛИ КНОПКУ СОХРАНИТЬ КАРТУ
     saveMap () {
       if (!this.myMap) return
-
+      if (!this.selectedMap || !this.selectedMap.key) {
+        this.createMapInDb()
+      } else {
+        this.updateMapInDb()
+      }
+    },
+    createMapInDb() {
+      this.$store.dispatch('uploadMapToDB', this.mapName).then(resp => {
+        const key = resp ? resp.key : ''
+        return this.$store.dispatch('downloadsMapListFromDB').then(() => {
+          if (this.maps[key]) {
+            this.selectedMap = this.maps[key]
+            this.updateMapInDb()
+          }
+        })
+      }).catch(err => {
+        console.log('Error in map uloading process')
+      })
+    },
+    updateMapInDb () {
       let mapObjects = []
       this.myMap.geoObjects.each((obj) => {
         const coord = obj.geometry.getCoordinates()
@@ -486,7 +529,8 @@ export default {
         height: this.mapHeight,
         style: `#map${this.selectedMap.key} {width:${this.mapWidth};height:${this.mapHeight};}`
       }
-      if (this.selectedMap) {
+
+      //
         this.$store.dispatch('updateMapToDB', {
           key: this.selectedMap.key,
           mapName: this.mapName,
@@ -506,30 +550,6 @@ export default {
         }).catch(err => {
           console.log('Error in map uloading process')
         })
-      } else {
-        this.$store.dispatch('uploadMapToDB', {
-          mapName: this.mapName,
-          style: style,
-          json: mapObjects,
-          btn: this.btnConfig,
-          center: this.mapCenter,
-          zoom: this.myMap.getZoom(),
-          icon: {
-            preset: this.presetOptions.preset,
-            color: this.iconColor[this.selectedIconTableColor-1],
-            name: this.iconName[this.selectedIcon]
-          }
-        }).then(resp => {
-          const key = resp ? resp.key : ''
-          return this.$store.dispatch('downloadsMapListFromDB').then(() => {
-            if (this.maps[key]) {
-              this.selectedMap = this.maps[key]
-            }
-          })
-        }).catch(err => {
-          console.log('Error in map uloading process')
-        })
-      }
     },
     deleteMap (map) {
       console.log('******* Delete', map, map.key)
@@ -642,10 +662,10 @@ export default {
       }
       const baseUrl = `const baseUrl = 'https://maplabel20171228.firebaseio.com/mapjson/${this.uid}/${this.selectedMap.key}.json';`
 
-      this.$refs.modalCodeRef.saveCodeToDB({
+      this.$refs.modalCodeRef.setCode({
         mapKey: this.selectedMap.key,
-        baseUrl: baseUrl,
-        style: `<style>#map${this.selectedMap.key} {min-width:200px;min-height:200px;}<` + '/style>'
+        baseUrl: baseUrl
+        // style: `<style>#map${this.selectedMap.key} {min-width:200px;min-height:200px;}<` + '/style>'
       })
       this.showModalCode = true
     }
