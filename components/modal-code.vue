@@ -65,7 +65,7 @@ export default {
   computed: {
     js () {
       return `
-
+        let mapID = '#map${this.mapKey}';
         let myMap;
         const yandexMapScript = document.createElement('SCRIPT')
         yandexMapScript.setAttribute('src', 'https://api-maps.yandex.ru/2.1/?lang=ru_RU')
@@ -139,6 +139,35 @@ export default {
               draggable: false,
               visible: true
             })
+            placemark.events.add('click', function(){
+              const txt1 = el.balloonContentHeader
+              console.log('txt1 = ', txt1)
+              setTimeout(function () {
+                const txt2 = txt1
+                console.log('txt1=',txt1, 'txt2=',txt2)
+                var recid = '43042167'
+                var obj = $(mapID).find('.button-in-balloon');
+                if (!obj) {
+                  return
+                }
+
+                obj.click(function (e) {
+                  const txt3 = txt2
+                  console.log('txt1=',txt1, 'txt2=',txt2, 'txt3=',txt3)
+                  $('body').addClass('t-body_popupshowed')
+                  const popup = $('#rec'+recid).find('input[name="objectNumber"]')
+                  if (popup) {
+                    popup.val(txt3)
+                  }
+                  t702_showPopup(recid);
+                  t702_resizePopup(recid);
+                  e.preventDefault();
+                  if (window.lazy == 'y') {
+                      t_lazyload_update()
+                  }
+                });
+              }, 500);
+            });
             myMap.geoObjects.add(placemark)
           })
         };`

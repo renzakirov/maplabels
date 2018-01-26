@@ -5,7 +5,8 @@
       :show="showModalButtonSetting"
       @close="showModalButtonSetting=false" @save="saveBtnConfig"/>
 
-    <modal-code ref="modalCodeRef" :show="showModalCode" :code="CODE" @close="showModalCode=false" />
+    <modal-code ref="modalCodeRef" :show="showModalCode" @close="showModalCode=false" />
+
     <div class="columns">
       <div class="column col-6 text-section">
         <h1>ПРИВЕТ</h1>
@@ -28,18 +29,18 @@
         <div class="map-config-box" :class="{disabled: !showMapBox}">
           <div class="divider"></div>
           <div class="column">
-            <button class="btn" @click="newMap">Новая карта</button>
+            <button class="btn mx-2" @click="newMap">Новая карта</button>
             <div class="dropdown" :class="{active: showMapsList}" v-if="maps" >
-              <button class="btn" @click="showMapsList = !showMapsList">Загрузить карту</button>
+              <button class="btn mx-2" @click="showMapsList = !showMapsList">Загрузить карту</button>
               <ul class="menu" :class="{active: showMapsList}" v-show="showMapsList">
                 <li class="menu-item" v-for="map in maps" :key="map.key" @click="selectMapItem(map)">
                   {{map.map_name}}
                 </li>
               </ul>
             </div>
-            <button class="btn" @click="saveMap">Сохранить карту</button>
+            <button class="btn mx-2" @click="saveMap">Сохранить карту</button>
             <div class="dropdown" :class="{active: showMapsDel}" v-if="maps">
-              <button class="btn btn-error" @click="showMapsDel = !showMapsDel">Удалить карту</button>
+              <button class="btn btn-error mx-2" @click="showMapsDel = !showMapsDel">Удалить карту</button>
               <ul class="menu" :class="{active: showMapsDel}" v-show="showMapsDel">
                 <li class="menu-item" v-for="map in maps" :key="map.key" @click="deleteMap(map)">
                   {{map.map_name}}
@@ -50,20 +51,22 @@
           <div class="column d-flex mt-2">
             <label class="form-label" :style="{width: '11rem'}">Название карты:</label>
             <input class="form-input" type="text" v-model="mapName">
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Название карты']"><img src="/info.png" width="20" height="20"></span>
           </div>
           <div class="divider"></div>
           <div class="column d-flex mt-2">
             <label class="form-label">Центр карты:</label>
             <input class="form-input" type="text" v-model="mapCenter">
             <button class="btn" @click="moveMapCenter">Переместить</button>
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Центр карты']"><img src="/info.png" width="20" height="20"></span>
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label">Масштаб:</label>
             <input class="form-input" :style="{width: '5rem'}" type="number" v-model="zoom">
             <button class="btn" @click="changeZoom">Изменить</button>
-            <label class="form-label tooltip" data-tooltip="Ширина карты на сайте в px или %" style="margin-left: 2rem; min-width: 5rem;">Ширина:</label>
+            <label class="form-label tooltip" :data-tooltip="help['Ширина']" style="margin-left: 2rem; min-width: 5rem;">Ширина:</label>
             <input class="form-input" type="text" v-model="mapWidth">
-            <label class="form-label tooltip" data-tooltip="Высота карты на сайте в px или vh" style="margin-left: 2rem; min-width: 5rem;">Высота:</label>
+            <label class="form-label tooltip" :data-tooltip="help['Высота']" style="margin-left: 2rem; min-width: 5rem;">Высота:</label>
             <input class="form-input" type="text" v-model="mapHeight">
           </div>
           <div class="divider"></div>
@@ -75,6 +78,7 @@
               @click="selectedIcon = i">
               <img :src="'/' + f" alt="icon">
             </div>
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Значок иконки']" style="margin-left: auto;margin-right:0;"><img src="/info.png" width="20" height="20"></span>
           </div>
           <div class="column d-flex mt-2">
             <label class="form-label">Цвет иконки:</label>
@@ -94,8 +98,9 @@
                 </tr>
               </tbody>
             </table>
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Цвет иконки']" style="margin-left: auto;margin-right:0;"><img src="/info.png" width="20" height="20"></span>
           </div>
-          <div class="column d-flex load-img-container">
+          <!--div class="column d-flex load-img-container">
             <label class="form-label" :style="{width: 'auto'}">Или загрузите свое изображение для иконки:</label>
             <input class="form-input" type="file" name="iconUpload" @change="onIconFileChange"  :style="{width: 'auto', 'margin-left':'1rem', 'margin-right':'1rem'}">
             <div class="loading-img-box"
@@ -104,16 +109,18 @@
               @click="selectedIcon = -1" >
               <img :src="loadingImg" alt="icon">
             </div>
-          </div>
+          </div-->
           <div class="divider"></div>
 
           <div class="column d-flex mt-2 map-btn-form-container">
             <label class="form-label">Отредактируйте кнопку:</label>
             <a class="button-in-balloon" @click="showModalButtonSetting=true">Редактировать</a>
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Отредактировать кнопку']" style="margin-left: auto;margin-right:0;"><img src="/info.png" width="20" height="20"></span>
           </div>
           <div class="divider"></div>
           <div class="column d-flex mt-2" style="justify-content: center;">
             <button class="btn btn-lg btn-success" @click="getCode">Получить код</button>
+            <span class="questionmark tooltip tooltip-left" :data-tooltip="help['Получить код']" style="margin-left: auto;margin-right:0;"><img src="/info.png" width="20" height="20"></span>
           </div>
         </div>
 
@@ -166,6 +173,7 @@
 
       </div>
     </div>
+    <toast-messages v-for="msg in messages" :key="msg.text" :msg="msg" />
   </div>
 </template>
 
@@ -175,12 +183,14 @@ import tinymce from 'vue-tinymce-editor'
 import * as R from 'ramda'
 import modalButtonSetting from '../components/modal-button-setting'
 import modalCode from '../components/modal-code'
+import toastMessages from '../components/toast-messages'
 
 export default {
   components: {
     'tinymce': tinymce,
     'modal-button-setting': modalButtonSetting,
-    'modal-code': modalCode
+    'modal-code': modalCode,
+    'toast-messages': toastMessages
   },
   data () {
     return {
@@ -274,7 +284,8 @@ export default {
       mapName: 'Новая карта',
       selectedMap: null,
       showModalCode: false,
-      CODE: 'Здесь будет код!'
+      messages: [],
+      messagesCount: 0
     }
   },
   beforeMount () {
@@ -318,6 +329,11 @@ export default {
       this.mapName = 'Новая карта'
       this.CancelObject ()
       this.clearMapObjects()
+      this.message({
+        header: 'Успешно',
+        text: `Новая карта готова к заполнению`,
+        type: 'success',
+      })
     },
     item_map_init () {
       this.myMap = new window.ymaps.Map('map', {
@@ -478,6 +494,11 @@ export default {
       const file = files[0]
       const fileName = file.name
       this.$store.dispatch('imageToStorage', {file: file, fileName: fileName}).then(url => {
+        this.message({
+          header: 'Успешно',
+          text: `Файл ${fileName} сохранен в базе`,
+          type: 'success',
+        })
         console.log('load IMAGE url = ', url)
         this.selectedObject.balloonContentBody += ('<img src="' + url + '" width="300">')
         e.target.files = null
@@ -545,7 +566,11 @@ export default {
             name: this.iconName[this.selectedIcon]
           }
         }).then(resp => {
-          console.log('Map updated')
+          this.message({
+            header: 'Успешно',
+            text: `Карта успешно сохранена`,
+            type: 'success',
+          })
           this.$store.dispatch('downloadsMapListFromDB')
         }).catch(err => {
           console.log('Error in map uloading process')
@@ -556,12 +581,20 @@ export default {
       this.showMapsDel = false
       if (!this.myMap || !map || !map.key) return
       if (this.selectedMap && (this.selectedMap.key == map.key)) {
-        console.log('******* Delete', map.key)
+        this.message({
+          header: 'Успешно',
+          text: `Карта успешно удалена`,
+          type: 'success',
+        })
         this.newMap()
       }
       console.log('Delete!!!!', map.key)
       this.$store.dispatch('deleteMapFromDB', map.key).then(resp => {
-        console.log('Map deleted')
+        this.message({
+          header: 'Успешно',
+          text: `Карта успешно удалена`,
+          type: 'success',
+        })
         this.$store.dispatch('downloadsMapListFromDB')
       })
     },
@@ -631,6 +664,11 @@ export default {
         placemark.events.add('drag', this.dragObject)
         this.myMap.geoObjects.add(placemark)
       })
+      this.message({
+        header: 'Успешно',
+        text: `Карта успешно загружена`,
+        type: 'success',
+      })
     },
     downloadsMapList () {
       this.$store.dispatch('downloadsMapListFromDB')
@@ -668,10 +706,24 @@ export default {
         // style: `<style>#map${this.selectedMap.key} {min-width:200px;min-height:200px;}<` + '/style>'
       })
       this.showModalCode = true
+    },
+    message(ops) {
+      this.messagesCount++
+      ops.show = true
+      ops.timer = 30000
+      ops.count = this.messagesCount
+      this.messages.push(ops)
+      setTimeout( () => {
+        const count = ops.count
+        const index = R.findIndex((msg) => msg.count == count, this.messages)
+        if (index > -1) {
+          this.messages.splice(index, 1)
+        }
+      },ops.timer)
     }
   },
   computed: {
-    ...mapGetters(['maps','uid']),
+    ...mapGetters(['maps','uid', 'help']),
     presetOptions () {
       return {
         preset: 'islands#' + this.iconColor[this.selectedIconTableColor-1] + this.iconName[this.selectedIcon], // 'islands#redStarCircleIcon',
@@ -708,9 +760,15 @@ export default {
         bottom: 0;
         transform: translateX(0);
         width: 100%;
-        padding-left: 1rem;
+        overflow-x: hidden;
         &.disabled {
           opacity: 0;
+        }
+
+        .d-flex {
+          align-items: center;
+          margin-top: 1rem;
+          margin-bottom: 1rem;
         }
 
         padding: 1rem;
@@ -721,7 +779,16 @@ export default {
         .form-label {
           min-width: 7rem;
         }
+
+        .questionmark {
+          margin-left: .5rem;
+        }
+        .tooltip.tooltip-left:after {
+          bottom: 100%
+        }
+
         .icon-select-column {
+          justify-content: flex-start;
           .icon-img {
             display: flex;
             align-items: center;
@@ -795,7 +862,6 @@ export default {
             }
             .btn {
               margin-right: 0px;
-              margin-bottom: 0px;
             }
           }
         }
@@ -845,10 +911,10 @@ export default {
     }
 
   }
-  .btn {
-    margin-right: 10px;
-    margin-bottom: 10px;
-  }
+  // .btn {
+  //   margin-right: 10px;
+  //   margin-bottom: 10px;
+  // }
   .dropdown {
     .menu {
       .menu-item {
