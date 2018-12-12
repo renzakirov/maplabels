@@ -1,10 +1,12 @@
-Расстановка "объектов" на карте (Yandex Map) -> генерация кода для вставки в сайт (например на Тильде).
+Расстановка "объектов" на карте (Yandex Map) -> генерация кода для вставки в сайт. (2017г.)
 
-2017г.
-Vue + Vuex Router + Firebase
+
+Vue + Vuex + Router + Firebase
 
 * Описание: http://1r8site.tilda.ws/maplabels
 * Сам сервис: https://maplabel20171228.firebaseapp.com/
+
+#### Скриншоты:
 
 ![](https://static.tildacdn.com/tild3563-6132-4234-a163-373165376430/all.png)
 
