@@ -1,22 +1,15 @@
-# maplabels
+Расстановка "объектов" на карте (Yandex Map) -> генерация кода для вставки в сайт (например на Тильде).
 
-> label with photos on map or on pictur
+2017г.
+Vue + Vuex Router + Firebase
 
-## Build Setup
+* Описание: http://1r8site.tilda.ws/maplabels
+* Сам сервис: https://maplabel20171228.firebaseapp.com/
 
-``` bash
-# install dependencies
-$ npm install # Or yarn install
+![](https://static.tildacdn.com/tild3563-6132-4234-a163-373165376430/all.png)
 
-# serve with hot reload at localhost:3000
-$ npm run dev
+![](https://static.tildacdn.com/tild3536-6534-4164-a561-386163333638/objects.png)
 
-# build for production and launch server
-$ npm run build
-$ npm start
+![](https://static.tildacdn.com/tild3965-3636-4333-b161-356464663864/code.png)
 
-# generate static project
-$ npm run generate
-```
-
-For detailed explanation on how things work, checkout the [Nuxt.js docs](https://github.com/nuxt/nuxt.js).
+![](https://static.tildacdn.com/tild6536-3234-4063-b566-636364616364/objmap.png)
